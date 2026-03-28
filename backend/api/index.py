@@ -1,13 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
-from datetime import datetime, time as dt_time
+from datetime import datetime
 import os
 import sys
 
-# Add the parent directory to sys.path so we can import from 'app'
+# Add path for local/Vercel compatibility
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import get_db, engine
@@ -18,24 +18,21 @@ load_dotenv()
 
 app = FastAPI(title="Scheduling Platform API")
 
-# Fix: Startup event must be defined AFTER app is created
-@app.on_event("startup")
-def startup_event():
-    models.Base.metadata.create_all(bind=engine)
+# DECISIVE CORS FIX (MANUAL STRATEGY)
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response()
+    else:
+        response = await call_next(request)
+    
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
-# CORS - Allow all for easy setup
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# OPTIONS Handler for Vercel CORS compatibility
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(rest_of_path: str):
-    return {}
+# Startup only on creation
+models.Base.metadata.create_all(bind=engine)
 
 # Health check
 @app.get("/api/health")
