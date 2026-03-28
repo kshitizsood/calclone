@@ -5,27 +5,28 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 from datetime import datetime, time as dt_time
 import os
-from dotenv import load_dotenv
+import sys
+
+# Add the parent directory to sys.path so we can import from 'app'
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import get_db, engine
 from app import models, schemas, services
 
+from dotenv import load_dotenv
 load_dotenv()
 
-# Remove global create_all to prevent startup crashes on cold starts
-# models.Base.metadata.create_all(bind=engine)
+app = FastAPI(title="Scheduling Platform API")
 
+# Fix: Startup event must be defined AFTER app is created
 @app.on_event("startup")
 def startup_event():
     models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Scheduling Platform API")
-
-# CORS
-origins = ["*"]  # Allowing all origins for simple deployment
+# CORS - Allow all for easy setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,9 +76,17 @@ def delete_availability_schedule(schedule_id: str, db: Session = Depends(get_db)
 
 @app.post("/api/availability-slots", response_model=schemas.AvailabilitySlotResponse, status_code=status.HTTP_201_CREATED)
 def create_availability_slot(slot: schemas.AvailabilitySlotCreate, db: Session = Depends(get_db)):
-    # Parse time strings
-    start_time = datetime.strptime(slot.start_time, "%H:%M").time()
-    end_time = datetime.strptime(slot.end_time, "%H:%M").time()
+    # Try different time formats
+    def parse_time(time_str):
+        for fmt in ("%H:%M", "%I:%M %p", "%I:%M%p", "%H:%M:%S"):
+            try:
+                return datetime.strptime(time_str, fmt).time()
+            except ValueError:
+                continue
+        raise HTTPException(status_code=400, detail=f"Invalid time format: {time_str}")
+    
+    start_time = parse_time(slot.start_time)
+    end_time = parse_time(slot.end_time)
     
     db_slot = models.AvailabilitySlot(
         schedule_id=slot.schedule_id,
