@@ -35,13 +35,13 @@ async def add_cors_headers(request: Request, call_next):
 models.Base.metadata.create_all(bind=engine)
 
 # Health check
-@app.get("/api/health")
+@app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
 # ==================== AVAILABILITY SCHEDULES ====================
 
-@app.post("/api/availability-schedules", response_model=schemas.AvailabilityScheduleResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/availability-schedules", response_model=schemas.AvailabilityScheduleResponse, status_code=status.HTTP_201_CREATED)
 def create_availability_schedule(schedule: schemas.AvailabilityScheduleCreate, db: Session = Depends(get_db)):
     db_schedule = models.AvailabilitySchedule(**schedule.model_dump())
     db.add(db_schedule)
@@ -49,12 +49,12 @@ def create_availability_schedule(schedule: schemas.AvailabilityScheduleCreate, d
     db.refresh(db_schedule)
     return db_schedule
 
-@app.get("/api/availability-schedules", response_model=List[schemas.AvailabilityScheduleResponse])
+@app.get("/availability-schedules", response_model=List[schemas.AvailabilityScheduleResponse])
 def get_availability_schedules(db: Session = Depends(get_db)):
     schedules = db.query(models.AvailabilitySchedule).all()
     return schedules
 
-@app.get("/api/availability-schedules/{schedule_id}", response_model=schemas.AvailabilityScheduleResponse)
+@app.get("/availability-schedules/{schedule_id}", response_model=schemas.AvailabilityScheduleResponse)
 def get_availability_schedule(schedule_id: str, db: Session = Depends(get_db)):
     schedule = db.query(models.AvailabilitySchedule).filter(
         models.AvailabilitySchedule.id == schedule_id
@@ -63,7 +63,7 @@ def get_availability_schedule(schedule_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Schedule not found")
     return schedule
 
-@app.delete("/api/availability-schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/availability-schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_availability_schedule(schedule_id: str, db: Session = Depends(get_db)):
     schedule = db.query(models.AvailabilitySchedule).filter(
         models.AvailabilitySchedule.id == schedule_id
@@ -76,7 +76,7 @@ def delete_availability_schedule(schedule_id: str, db: Session = Depends(get_db)
 
 # ==================== AVAILABILITY SLOTS ====================
 
-@app.post("/api/availability-slots", response_model=schemas.AvailabilitySlotResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/availability-slots", response_model=schemas.AvailabilitySlotResponse, status_code=status.HTTP_201_CREATED)
 def create_availability_slot(slot: schemas.AvailabilitySlotCreate, db: Session = Depends(get_db)):
     # Try different time formats
     def parse_time(time_str):
@@ -101,7 +101,7 @@ def create_availability_slot(slot: schemas.AvailabilitySlotCreate, db: Session =
     db.refresh(db_slot)
     return db_slot
 
-@app.get("/api/availability-slots", response_model=List[schemas.AvailabilitySlotResponse])
+@app.get("/availability-slots", response_model=List[schemas.AvailabilitySlotResponse])
 def get_availability_slots(schedule_id: str = None, db: Session = Depends(get_db)):
     query = db.query(models.AvailabilitySlot)
     if schedule_id:
@@ -109,7 +109,7 @@ def get_availability_slots(schedule_id: str = None, db: Session = Depends(get_db
     slots = query.all()
     return slots
 
-@app.delete("/api/availability-slots/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/availability-slots/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_availability_slot(slot_id: str, db: Session = Depends(get_db)):
     slot = db.query(models.AvailabilitySlot).filter(models.AvailabilitySlot.id == slot_id).first()
     if not slot:
@@ -120,7 +120,7 @@ def delete_availability_slot(slot_id: str, db: Session = Depends(get_db)):
 
 # ==================== EVENT TYPES ====================
 
-@app.post("/api/events", response_model=schemas.EventTypeResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/events", response_model=schemas.EventTypeResponse, status_code=status.HTTP_201_CREATED)
 def create_event(event: schemas.EventTypeCreate, db: Session = Depends(get_db)):
     db_event = models.EventType(**event.model_dump())
     db.add(db_event)
@@ -132,19 +132,19 @@ def create_event(event: schemas.EventTypeCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Event with this slug already exists")
     return db_event
 
-@app.get("/api/events", response_model=List[schemas.EventTypeResponse])
+@app.get("/events", response_model=List[schemas.EventTypeResponse])
 def get_events(db: Session = Depends(get_db)):
     events = db.query(models.EventType).all()
     return events
 
-@app.get("/api/events/{event_id}", response_model=schemas.EventTypeResponse)
+@app.get("/events/{event_id}", response_model=schemas.EventTypeResponse)
 def get_event(event_id: str, db: Session = Depends(get_db)):
     event = db.query(models.EventType).filter(models.EventType.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return event
 
-@app.put("/api/events/{event_id}", response_model=schemas.EventTypeResponse)
+@app.put("/events/{event_id}", response_model=schemas.EventTypeResponse)
 def update_event(event_id: str, event: schemas.EventTypeUpdate, db: Session = Depends(get_db)):
     db_event = db.query(models.EventType).filter(models.EventType.id == event_id).first()
     if not db_event:
@@ -162,7 +162,7 @@ def update_event(event_id: str, event: schemas.EventTypeUpdate, db: Session = De
         raise HTTPException(status_code=400, detail="Event with this slug already exists")
     return db_event
 
-@app.delete("/api/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_event(event_id: str, db: Session = Depends(get_db)):
     db_event = db.query(models.EventType).filter(models.EventType.id == event_id).first()
     if not db_event:
@@ -173,19 +173,19 @@ def delete_event(event_id: str, db: Session = Depends(get_db)):
 
 # ==================== PUBLIC BOOKING ====================
 
-@app.get("/api/public/events/{slug}", response_model=schemas.EventTypeResponse)
+@app.get("/public/events/{slug}", response_model=schemas.EventTypeResponse)
 def get_event_by_slug(slug: str, db: Session = Depends(get_db)):
     event = db.query(models.EventType).filter(models.EventType.slug == slug).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return event
 
-@app.get("/api/public/slots", response_model=List[schemas.SlotResponse])
+@app.get("/public/slots", response_model=List[schemas.SlotResponse])
 def get_available_slots(slug: str, date: str, db: Session = Depends(get_db)):
     slots = services.generate_slots(db, slug, date)
     return slots
 
-@app.post("/api/public/book", response_model=schemas.BookingResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/public/book", response_model=schemas.BookingResponse, status_code=status.HTTP_201_CREATED)
 def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)):
     try:
         db_booking = services.create_booking(db, booking)
@@ -201,7 +201,7 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
 
 # ==================== BOOKINGS DASHBOARD ====================
 
-@app.get("/api/bookings/upcoming", response_model=List[schemas.BookingResponse])
+@app.get("/bookings/upcoming", response_model=List[schemas.BookingResponse])
 def get_upcoming_bookings(db: Session = Depends(get_db)):
     now = datetime.utcnow()
     bookings = db.query(models.Booking).filter(
@@ -210,7 +210,7 @@ def get_upcoming_bookings(db: Session = Depends(get_db)):
     ).order_by(models.Booking.start_time).all()
     return bookings
 
-@app.get("/api/bookings/past", response_model=List[schemas.BookingResponse])
+@app.get("/bookings/past", response_model=List[schemas.BookingResponse])
 def get_past_bookings(db: Session = Depends(get_db)):
     now = datetime.utcnow()
     bookings = db.query(models.Booking).filter(
@@ -218,7 +218,7 @@ def get_past_bookings(db: Session = Depends(get_db)):
     ).order_by(models.Booking.start_time.desc()).all()
     return bookings
 
-@app.post("/api/bookings/{booking_id}/cancel", response_model=schemas.BookingResponse)
+@app.post("/bookings/{booking_id}/cancel", response_model=schemas.BookingResponse)
 def cancel_booking(booking_id: str, db: Session = Depends(get_db)):
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if not booking:
