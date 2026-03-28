@@ -136,7 +136,7 @@ export default function EventsPage() {
               <div className="space-y-2">
                 <label className="text-[13px] font-bold text-brand-muted uppercase tracking-wider">URL Slug</label>
                 <div className="flex items-center bg-black border border-brand-border rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-white transition-all">
-                  <span className="pl-4 pr-1 text-brand-muted text-sm font-medium">cal.com/hardik/</span>
+                  <span className="pl-4 pr-1 text-brand-muted text-sm font-medium">cal.com/kshitiz/</span>
                   <input
                     type="text"
                     value={formData.slug}
