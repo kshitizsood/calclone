@@ -1,14 +1,14 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "app/main.py",
-      "use": "@vercel/python"
+  "functions": {
+    "app/main.py": {
+      "runtime": "@vercel/python",
+      "memory": 1024,
+      "maxDuration": 10
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
+      "source": "/(.*)",
       "dest": "app/main.py"
     }
   ]
