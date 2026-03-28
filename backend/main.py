@@ -12,8 +12,12 @@ from app import models, schemas, services
 
 load_dotenv()
 
-# Create tables
-models.Base.metadata.create_all(bind=engine)
+# Remove global create_all to prevent startup crashes on cold starts
+# models.Base.metadata.create_all(bind=engine)
+
+@app.on_event("startup")
+def startup_event():
+    models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Scheduling Platform API")
 
