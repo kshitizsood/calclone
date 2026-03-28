@@ -32,6 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# OPTIONS Handler for Vercel CORS compatibility
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    return {}
+
 # Health check
 @app.get("/api/health")
 def health_check():
