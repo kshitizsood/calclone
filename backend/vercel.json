@@ -1,6 +1,6 @@
 {
   "functions": {
-    "app/main.py": {
+    "main.py": {
       "runtime": "@vercel/python",
       "memory": 1024,
       "maxDuration": 10
@@ -9,7 +9,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "dest": "app/main.py"
+      "dest": "main.py"
     }
   ]
 }
